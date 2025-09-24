@@ -9,6 +9,7 @@ class User(Base):
     __tablename__ = "user_table"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    username: Mapped[Optional[str]] = mapped_column(nullable=True)
     email: Mapped[str] = mapped_column(nullable=False, unique=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
 
@@ -28,7 +29,7 @@ class Provider(Base):
     client_username: Mapped[Optional[str]] = mapped_column(nullable=True)
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user_table.id"), nullable=False)
-        user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship()
 
     def __repr__(self) -> str:
         return (f"Provider(id={self.id}, name={self.name},"

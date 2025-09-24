@@ -8,6 +8,10 @@ class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    @classmethod
+    def get_repo(cls, session: AsyncSession) -> "UserRepository":
+        return cls(session)
+
     async def get_by_id(self, user_id: UUID) -> User | None:
         stmt = select(User).where(User.id == user_id).limit(1)
         return await self.session.scalar(stmt)

@@ -6,6 +6,10 @@ class RedisRepository:
     def __init__(self, redis: Redis):
         self.redis = redis
 
+    @classmethod
+    def get_repo(cls, redis: Redis) -> "RedisRepository":
+        return cls(redis)
+
     async def _get_by_key(self, key: str) -> dict | None:
         response = await self.redis.hgetall(key)
         if not response:
