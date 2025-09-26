@@ -32,9 +32,9 @@ class RedisSessionManager:
         finally:
             await client.aclose()
 
-redis_manager = RedisSessionManager(env.redis.url)
-
-@contextlib.asynccontextmanager
-async def redis_client() -> AsyncIterator[Redis]:
-    async with redis_manager.client() as client:
-        yield client
+# redis_manager = RedisSessionManager(env.redis.url)
+#
+# @contextlib.asynccontextmanager
+# async def redis_client() -> AsyncIterator[Redis]:
+#     async with redis_manager.client() as client:
+#         yield client

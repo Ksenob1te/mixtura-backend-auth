@@ -1,2 +1,2 @@
-from .engine import redis_manager, redis_client
+from .engine import RedisSessionManager
 from .repository import RedisRepository

@@ -8,10 +8,6 @@ class ProviderRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    @classmethod
-    def get_repo(cls, session: AsyncSession) -> "ProviderRepository":
-        return cls(session)
-
     async def get_by_id(self, provider_id: UUID) -> Provider | None:
         stmt = select(Provider).where(Provider.id == provider_id).limit(1)
         return await self.session.scalar(stmt)

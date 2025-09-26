@@ -15,6 +15,8 @@ class RedisConfig(LocalSettings):
     @property
     def url(self) -> str:
         return f"redis://{self.user}:{self.password}@{self.host}:{self.port}"
+
+
 #
 #
 # class AIConfig(LocalSettings):
@@ -48,6 +50,7 @@ class PostgresConfig(LocalSettings):
     @property
     def url(self) -> str:
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
+
 
 # class ServerConfig(LocalSettings):
 #     host: str = Field(default="0.0.0.0", alias="SERVER_HOST")

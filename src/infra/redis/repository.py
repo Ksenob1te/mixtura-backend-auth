@@ -2,21 +2,28 @@ from src.env_config import env
 from redis.asyncio import Redis
 from typing import Optional
 
+
 class RedisRepository:
     def __init__(self, redis: Redis):
         self.redis = redis
 
-    @classmethod
-    def get_repo(cls, redis: Redis) -> "RedisRepository":
-        return cls(redis)
-
-    async def _get_by_key(self, key: str) -> dict | None:
+    async def _get_dict_by_key(self, key: str) -> dict | None:
         response = await self.redis.hgetall(key)
         if not response:
             return None
-        return {k.decode() if isinstance(k, bytes) else k: v.decode() if isinstance(v, bytes) else v for k, v in response.items()}
+        return {k.decode() if isinstance(k, bytes) else k: v.decode() if isinstance(v, bytes) else v for k, v in
+                response.items()}
 
-    async def get_user_by_id(self, user_id: int) -> dict | None:
-        hash_value = f"user-{user_id}"
-        return await self._get_by_key(hash_value)
+    async def _get_element_by_key(self, key: str) -> str | None:
+        response = await self.redis.get(key)
+        if not response:
+            return None
+        return response.decode() if isinstance(response, bytes) else response
 
+    async def get_user_by_cookie(self, cookie: str) -> str | None:
+        hash_value = f"cookie::{cookie}"
+        return await self._get_element_by_key(hash_value)
+
+    async def set_user_cookie(self, token: str, user_id: str, expire: Optional[int] = None) -> None:
+        key = f"cookie::{token}"
+        await self.redis.set(key, user_id, ex=expire)

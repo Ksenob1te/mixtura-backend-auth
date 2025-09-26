@@ -11,6 +11,7 @@ _DEF_DATEFMT = '%Y-%m-%d %H:%M:%S'
 
 _configured = False
 
+
 def _log_unhandled_exception(exc_type, exc_value, exc_tb):
     logger = logging.getLogger('UNCAUGHT')
     formatted_tb = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
@@ -48,5 +49,6 @@ def setup_logging(level: int = logging.INFO):
 
     logging.getLogger(__name__).info('Logging initialized. File=%s', LOG_FILE_PATH.resolve())
     _configured = True
+
 
 __all__ = ['setup_logging', 'LOG_FILE_PATH']

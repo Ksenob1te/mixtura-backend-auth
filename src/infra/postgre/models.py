@@ -1,9 +1,11 @@
-from typing import Optional
+import datetime
+from typing import Optional, List
 
 from uuid import uuid4, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, DateTime, func
+from sqlalchemy import ForeignKey, func
 from . import Base
+
 
 class User(Base):
     __tablename__ = "user_table"
@@ -13,12 +15,13 @@ class User(Base):
     email: Mapped[str] = mapped_column(nullable=False, unique=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
 
-    registration_date: Mapped[DateTime] = mapped_column(nullable=False, default=func.now())
+    registration_date: Mapped[datetime.datetime] = mapped_column(nullable=False, default=func.now())
 
-    providers: Mapped[list["Provider"]] = relationship(backref="user", lazy="selectin")
+    providers: Mapped[List["Provider"]] = relationship(back_populates="user", lazy="selectin")
 
     def __repr__(self) -> str:
         return f"User(id={self.id})"
+
 
 class Provider(Base):
     __tablename__ = "provider_table"

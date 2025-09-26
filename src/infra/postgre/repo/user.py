@@ -8,10 +8,6 @@ class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    @classmethod
-    def get_repo(cls, session: AsyncSession) -> "UserRepository":
-        return cls(session)
-
     async def get_by_id(self, user_id: UUID) -> User | None:
         stmt = select(User).where(User.id == user_id).limit(1)
         return await self.session.scalar(stmt)
@@ -20,8 +16,8 @@ class UserRepository:
         stmt = select(User).where(User.email == email).limit(1)
         return await self.session.scalar(stmt)
 
-    async def create_user(self, email: str, hashed_password: str) -> User:
-        user = User(email=email, hashed_password=hashed_password)
+    async def create_user(self, username: str, email: str, hashed_password: str) -> User:
+        user = User(username=username, email=email, hashed_password=hashed_password)
         self.session.add(user)
         await self.session.flush()
         return await self.get_by_id(user.id)
