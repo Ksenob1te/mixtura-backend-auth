@@ -52,14 +52,15 @@ class PostgresConfig(LocalSettings):
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
 
 
-# class ServerConfig(LocalSettings):
-#     host: str = Field(default="0.0.0.0", alias="SERVER_HOST")
-#     port: int = Field(default=8000, alias="SERVER_PORT")
+class ServerConfig(LocalSettings):
+    host: str = Field(default="0.0.0.0", alias="SERVER_HOST")
+    port: int = Field(default=8000, alias="SERVER_PORT")
 
 
 class Env(LocalSettings):
     postgres: PostgresConfig = Field(default_factory=PostgresConfig)
     redis: RedisConfig = Field(default_factory=RedisConfig)
+    server: ServerConfig = Field(default_factory=ServerConfig)
 
     @classmethod
     def load(cls) -> "Env":

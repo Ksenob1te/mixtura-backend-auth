@@ -17,5 +17,6 @@ class UserModel(BaseModel):
 
     id: UUID
     username: Optional[str]
+    email: Optional[str]
     registration_date: datetime
     providers: List[ProviderModel]

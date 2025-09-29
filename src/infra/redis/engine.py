@@ -32,6 +32,10 @@ class RedisSessionManager:
         finally:
             await client.aclose()
 
+    @property
+    async def opened(self) -> bool:
+        return self._pool is not None
+
 # redis_manager = RedisSessionManager(env.redis.url)
 #
 # @contextlib.asynccontextmanager

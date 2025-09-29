@@ -1,17 +1,11 @@
-# from backend.dependencies import UserServiceDepends
-# from backend.utils import GetDBSession, GetOptionalUser, GetRedisClient, GetUser
-# from domain.services.user.service import UserService
-from fastapi import Response, Depends, Request
-from fastapi_controllers import Controller, get, post
-from ..models import UserModel
+from fastapi import Depends, Request, Response
+from fastapi_controllers import Controller, get, post, put
+from ..models import UserModel, UpdateResponse, StatusResponse, UpdateUserRequest, SignInRequest
+from ..exceptions import AlreadyAuthorizedException
 
 from typing import Annotated
 from ..service import UserService
 from src.dependency import get_user_service
-# from postgre_module.repository.user_repository import UserRepository
-# from redis_module.repository import RedisRepository
-# from domain.services.user.models import LogInRequest as DomainLogInRequest, SignUpRequest as DomainSignUpRequest
-# from settings import APP_SETTINGS
 
 
 class AuthController(Controller):
@@ -22,35 +16,27 @@ class AuthController(Controller):
         super().__init__()
         self.user_service = user_service
 
-    @get("", response_model=UserModel)
+    @get("/user", response_model=UserModel)
     async def get_user_info(self, request: Request) -> UserModel:
         user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
         return await self.user_service.get_user_info(user_uuid)
 
-    @post("/login")
-    async def login(self, data: LogInRequest, response: Response):
-        result = await self.user_service.login(
-            DomainLogInRequest(
-                data.username,
-                data.password)
-        )
-        response.set_cookie("token",
-                            result.token,
-                            max_age=APP_SETTINGS.ttl.auth_token_expire,
-                            httponly=True)
-        return {"message": "OK"}
+    @put("/user", response_model=UpdateResponse)
+    async def update_username(self, data: UpdateUserRequest, request: Request) -> UpdateResponse:
+        user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
+        ok = await self.user_service.update_username(user_uuid, data.username)
+        return UpdateResponse(updated=ok)
 
-    @post("/logout")
-    async def logout(self, user: GetUser, response: Response):
-        await self.user_service.logout(user.token)
+    @post("/signin", response_model=StatusResponse)
+    async def sign_in(self, request: Request, data: SignInRequest, response: Response) -> StatusResponse:
+        if request.cookies.get("token", None):
+            raise AlreadyAuthorizedException()
+        token = await self.user_service.sign_in(data.login, data.password)
+        response.set_cookie("token", token, httponly=True)
+        return StatusResponse()
+
+    @post("/signout", response_model=StatusResponse)
+    async def sign_out(self, request: Request, response: Response) -> StatusResponse:
+        await self.user_service.sign_out(request.cookies.get("token"))
         response.delete_cookie("token")
-        return {"message": "OK"}
-
-    @post("/registration")
-    async def registration(self, data: SignUpRequest):
-        await self.user_service.signup(DomainSignUpRequest(
-            data.username,
-            data.password,
-            data.repeat_password
-        ))
-        return {"message": "OK"}
+        return StatusResponse()

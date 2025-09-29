@@ -50,11 +50,16 @@ class DatabaseSessionManager:
         session = self._sessionmaker()
         try:
             yield session
+            await session.commit()
         except Exception:
             await session.rollback()
             raise
         finally:
             await session.close()
+
+    @property
+    async def opened(self) -> bool:
+        return self._engine is not None or self._sessionmaker is not None
 
 
 

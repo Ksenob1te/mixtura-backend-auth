@@ -1,6 +1,8 @@
 from src.env_config import env
 from redis.asyncio import Redis
 from typing import Optional
+from datetime import timedelta
+from uuid import UUID
 
 
 class RedisRepository:
@@ -24,6 +26,10 @@ class RedisRepository:
         hash_value = f"cookie::{cookie}"
         return await self._get_element_by_key(hash_value)
 
-    async def set_user_cookie(self, token: str, user_id: str, expire: Optional[int] = None) -> None:
+    async def set_user_cookie(self, token: str, user_id: UUID, expire: timedelta = timedelta(days=30)) -> None:
         key = f"cookie::{token}"
-        await self.redis.set(key, user_id, ex=expire)
+        await self.redis.set(key, str(user_id), ex=expire)
+
+    async def remove_user_cookie(self, token: str) -> None:
+        key = f"cookie::{token}"
+        await self.redis.delete(key)

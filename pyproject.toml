@@ -6,10 +6,13 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "asyncpg>=0.30.0",
+    "bcrypt>=5.0.0",
+    "email-validator>=2.3.0",
     "fastapi>=0.117.1",
     "fastapi-controllers>=0.3.0",
     "pydantic>=2.11.9",
     "pydantic-settings>=2.10.1",
     "redis>=6.4.0",
     "sqlalchemy>=2.0.43",
+    "uvicorn>=0.37.0",
 ]
