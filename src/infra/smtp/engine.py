@@ -1,17 +1,14 @@
 import contextlib
 from typing import AsyncIterator
 import aiosmtplib
-from email.mime.text import MIMEText
-from email.header import Header
-from src.env_config import env
 
 
 class SMTPManager:
-    def __init__(self):
-        self._host = env.smtp.host
-        self._port = env.smtp.port
-        self._user = env.smtp.user
-        self._password = env.smtp.password
+    def __init__(self, host, port, user, password):
+        self._host = host
+        self._port = port
+        self._user = user
+        self._password = password
 
     @contextlib.asynccontextmanager
     async def client(self) -> AsyncIterator[aiosmtplib.SMTP]:

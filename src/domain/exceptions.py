@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST
 
 
 class NotAuthorizedException(HTTPException):
@@ -31,5 +31,27 @@ class AlreadyAuthorizedException(HTTPException):
             detail={
                 "status": "error",
                 "message": "Already authorized"
+            }
+        )
+
+
+class ExceedRetryLimitException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=HTTP_409_CONFLICT,
+            detail={
+                "status": "error",
+                "message": "Exceed retry limit"
+            }
+        )
+
+
+class PasswordsDontMatchException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail={
+                "status": "error",
+                "message": "Passwords don't match"
             }
         )

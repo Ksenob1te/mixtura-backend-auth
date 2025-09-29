@@ -8,3 +8,8 @@ class UpdateResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     status: str = Field(default="ok")
+
+
+class VerifyResponse(BaseModel):
+    status: str = Field(default="ok")
+    verified: bool = Field(default=False)

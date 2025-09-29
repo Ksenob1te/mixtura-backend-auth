@@ -35,8 +35,14 @@ class UserRepository:
         await self.session.flush()
         return await self.get_by_id(user.id)
 
-    async def update_username(self, user_id: UUID, new_username: str) -> bool:
+    async def change_username(self, user_id: UUID, new_username: str) -> bool:
         stmt = update(User).where(User.id == user_id).values(username=new_username)
+        result = await self.session.execute(stmt)
+        await self.session.flush()
+        return result.rowcount == 1
+
+    async def change_password(self, user_id: UUID, new_password: str) -> bool:
+        stmt = update(User).where(User.id == user_id).values(hashed_password=await self._hash_password(new_password))
         result = await self.session.execute(stmt)
         await self.session.flush()
         return result.rowcount == 1
