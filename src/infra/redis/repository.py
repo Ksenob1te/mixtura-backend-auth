@@ -33,3 +33,13 @@ class RedisRepository:
     async def remove_user_cookie(self, token: str) -> None:
         key = f"cookie::{token}"
         await self.redis.delete(key)
+
+    async def assign_email_code(self, email: str, code: str, expire: timedelta = timedelta(minutes=10)) -> None:
+        key = f"email::verify::{email}"
+        await self.redis.set(key, code, ex=expire)
+
+    async def remove_email_code(self, email: str) -> None:
+        key = f"email::verify::{email}"
+        await self.redis.delete(key)
+
+    # async def
