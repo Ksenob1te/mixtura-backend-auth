@@ -17,14 +17,13 @@ class User(Base):
 
     registration_date: Mapped[datetime.datetime] = mapped_column(nullable=False, default=func.now())
 
-    providers: Mapped[List["Provider"]] = relationship(back_populates="user", lazy="selectin")
+    providers: Mapped[List["UserProvider"]] = relationship(back_populates="user", lazy="selectin")
 
     def __repr__(self) -> str:
         return f"User(id={self.id})"
 
-
-class Provider(Base):
-    __tablename__ = "provider_table"
+class UserProvider(Base):
+    __tablename__ = "user_provider_table"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(nullable=False)

@@ -1,16 +1,17 @@
+from enum import Enum
 from pydantic import BaseModel, Field, field_validator, EmailStr
+
+
+class UpdateUserRequest(BaseModel):
+    username: str = Field(min_length=4, max_length=16)
 
 
 def strip_and_lower(v: object) -> str:
     return str(v).strip().lower()
 
 
-class UpdateUserRequest(BaseModel):
-    username: str = Field(min_length=1, max_length=64)
-
-
 class ResetPasswordRequest(BaseModel):
-    email: EmailStr = None
+    email: EmailStr
 
     @field_validator("email")
     @classmethod
@@ -19,7 +20,7 @@ class ResetPasswordRequest(BaseModel):
 
 
 class ResetPasswordVerify(BaseModel):
-    email: EmailStr = None
+    email: EmailStr
     token: str
 
     @field_validator("email")
@@ -29,7 +30,7 @@ class ResetPasswordVerify(BaseModel):
 
 
 class ResetPasswordConfirm(BaseModel):
-    email: EmailStr = None
+    email: EmailStr
     token: str
     password: str
     repeat_password: str
@@ -42,10 +43,9 @@ class ResetPasswordConfirm(BaseModel):
 
 class SignInRequest(BaseModel):
     login: str
-    password: str
+    password: str = Field(min_length=6)
 
     @field_validator("login")
     @classmethod
     def validate_login(cls, v: str) -> str:
         return strip_and_lower(v)
-

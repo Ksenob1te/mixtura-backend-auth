@@ -1,4 +1,4 @@
-from src.infra.postgre import ProviderRepository, UserRepository, Provider, User
+from src.infra.postgre import ProviderRepository, UserRepository, UserProvider, User
 from src.infra.redis import RedisRepository
 from src.infra.smtp import SMTPRepository
 import random

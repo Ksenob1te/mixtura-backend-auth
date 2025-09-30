@@ -1,5 +1,8 @@
 from fastapi import Depends, Request, Response
 from fastapi_controllers import Controller, get, post, put
+
+from src.domain.models.response import Provider, Providers
+from src.providers_config import PROVIDERS
 from ..models import *
 from ..exceptions import AlreadyAuthorizedException, PasswordsDontMatchException
 
@@ -67,3 +70,9 @@ class AuthController(Controller):
             await self.user_service.change_password(user_id, request.password)
             # TODO: add session removal here
         return VerifyResponse(verified=verified)
+    @get("/providers", response_model=Providers)
+    async def providers(self):
+        return {
+            "email_enabled": PROVIDERS.email_enabled,
+            "oauth_providers": list(filter(lambda x: x["enabled"], PROVIDERS.model_dump()['oauth_providers'].values()))
+        }
