@@ -6,6 +6,7 @@ from pathlib import Path
 
 CONFIG_PATH = Path("./.local/config.yaml")
 
+
 class OAuthProviderConfig(BaseModel):
     display_name: str
     icon_url: str
@@ -18,6 +19,7 @@ class OAuthProviderConfig(BaseModel):
     scopes: List[str] = []
     use_in_auth: bool = False
     enabled: bool = False
+
 
 class ProvidersConfig(BaseSettings):
     email_enabled: bool = True
@@ -45,8 +47,20 @@ class ProvidersConfig(BaseSettings):
                 redirect_uri="https://yourapp.com/oauth/callback/twitch",
                 scopes=["user:read:email"]
             ),
+            "battlenet": OAuthProviderConfig(
+                display_name="Battle.net",
+                icon_url="",
+                auth_url="https://oauth.battle.net/authorize",
+                token_url="https://eu.battle.net/oauth/token",
+                user_url="https://eu.battle.net/oauth/userinfo",
+                client_id="your_battlenet_client_id",
+                client_secret="your_battlenet_client_secret",
+                redirect_uri="https://yourapp.com/oauth/callback/battlenet",
+                scopes=["openid", "profile"]
+            ),
         }
     )
+
     @classmethod
     def load_or_create(cls, path: Path = CONFIG_PATH) -> "ProvidersConfig":
         if path.exists():
@@ -58,8 +72,10 @@ class ProvidersConfig(BaseSettings):
             config = cls()
             # Сохраняем YAML
             with open(path, "w", encoding="utf-8") as f:
-                yaml.safe_dump({"config": config.model_dump()}, f, sort_keys=False)
+                yaml.safe_dump({"config": config.model_dump()},
+                               f, sort_keys=False)
             print(f"Создан новый конфиг: {path}")
             return config
+
 
 PROVIDERS = ProvidersConfig.load_or_create()

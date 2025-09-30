@@ -17,6 +17,7 @@ class VerifyResponse(BaseModel):
 
 class Provider(BaseModel):
     icon_url: str
+    id: str
     display_name: str
     redirect_uri: str
     use_in_auth: bool

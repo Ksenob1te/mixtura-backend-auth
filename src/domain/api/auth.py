@@ -2,14 +2,15 @@ from fastapi import Depends, Request, Response
 from fastapi_controllers import Controller, get, post, put
 
 from src.domain.models.response import Provider, Providers
+from src.domain.service.auth import AuthService
+from src.domain.service.oauth import OAuthService
 from src.providers_config import PROVIDERS
 from ..models import *
 from ..exceptions import AlreadyAuthorizedException, InternalLogicException
 
 from typing import Annotated
 from ..service import UserService, MailService
-from src.infra.postgre import User
-from src.dependency import get_user_service, get_mail_service
+from src.dependency import get_auth_service, get_oauth_service, get_user_service, get_mail_service
 
 import logging
 
@@ -20,11 +21,15 @@ class AuthController(Controller):
 
     def __init__(self,
                  user_service: Annotated[UserService, Depends(get_user_service)],
-                 mail_service: Annotated[MailService, Depends(get_mail_service)]) -> None:
+                 mail_service: Annotated[MailService, Depends(get_mail_service)],
+                 auth_service: Annotated[AuthService, Depends(get_auth_service)],
+                 oauth_service: Annotated[OAuthService, Depends(get_oauth_service)]) -> None:
         super().__init__()
         self.user_service = user_service
         self.mail_service = mail_service
         self.logger = logging.getLogger(__name__)
+        self.auth_service = auth_service
+        self.oauth_service = oauth_service
 
     @get("/user", response_model=UserModel)
     async def get_user_info(self, request: Request) -> User:
@@ -117,7 +122,8 @@ class AuthController(Controller):
 
     @get("/providers", response_model=Providers)
     async def providers(self):
-        return {
-            "email_enabled": PROVIDERS.email_enabled,
-            "oauth_providers": list(filter(lambda x: x["enabled"], PROVIDERS.model_dump()['oauth_providers'].values()))
-        }
+        return self.auth_service.get_providers()
+
+    @post("/callback")
+    async def callback(self, req: OAuthConfirm, request: Request):
+        pass

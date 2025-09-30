@@ -62,3 +62,7 @@ class SignInRequest(BaseModel):
     @classmethod
     def validate_login(cls, v: str) -> str:
         return strip_and_lower(v)
+
+class OAuthConfirm(BaseModel):
+    provider: str
+    code: str

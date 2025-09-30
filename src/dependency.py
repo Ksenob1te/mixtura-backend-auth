@@ -1,4 +1,7 @@
 from fastapi import Request, Depends
+
+from src.domain.service.auth import AuthService
+from src.domain.service.oauth import OAuthService
 from .infra.postgre import DatabaseSessionManager, ProviderRepository, UserRepository
 from .infra.redis import RedisSessionManager, RedisRepository
 from .infra.smtp import SMTPRepository, SMTPManager
@@ -71,3 +74,9 @@ async def get_mail_service(
         smtp_repo: Annotated[SMTPRepository, Depends(get_smtp_repository)]
 ):
     return MailService(smtp_repo, redis_repo, user_repo)
+
+async def get_auth_service():
+    return AuthService()
+
+async def get_oauth_service():
+    return OAuthService()
