@@ -1,15 +1,17 @@
 from fastapi import Depends, Request, Response
 from fastapi_controllers import Controller, get, post, put
 
-from src.domain.models.response import Provider, Providers
-from src.domain.service.auth import AuthService
-from src.domain.service.oauth import OAuthService
 from src.providers_config import PROVIDERS
+
+from ..service.auth import AuthService
+from ..service.oauth import OAuthService
+from ..service import UserService, MailService
 from ..models import *
 from ..exceptions import AlreadyAuthorizedException, InternalLogicException
 
+from src.infra.postgre import User
+
 from typing import Annotated
-from ..service import UserService, MailService
 from src.dependency import get_auth_service, get_oauth_service, get_user_service, get_mail_service
 
 import logging
