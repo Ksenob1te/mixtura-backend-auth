@@ -75,8 +75,10 @@ async def get_mail_service(
 ):
     return MailService(smtp_repo, redis_repo, user_repo)
 
+
 async def get_auth_service():
     return AuthService()
+
 
 async def get_oauth_service():
     return OAuthService()

@@ -36,7 +36,7 @@ class AuthController(Controller):
     @get("/user", response_model=UserModel)
     async def get_user_info(self, request: Request) -> User:
         user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
-        user_field = await self.user_service.get_user_info(user_uuid)
+        user_field = await self.user_service.get_user_field(user_uuid)
         if user_field is None:
             self.logger.warning("User authorized, but not found in DB, id=%s", user_uuid)
             raise InternalLogicException("User not found")
@@ -45,7 +45,7 @@ class AuthController(Controller):
     @put("/user", response_model=UpdateResponse)
     async def update_username(self, request: Request, data: UpdateUserRequest) -> UpdateResponse:
         user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
-        ok = await self.user_service.update_username(user_uuid, data.username)
+        ok = await self.user_service.change_username(user_uuid, data.username)
         return UpdateResponse(updated=ok)
 
     @post("/signin", response_model=StatusResponse)

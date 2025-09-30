@@ -38,11 +38,14 @@ class UserService:
         user = await self.user_repo.get_by_username(username)
         return user.id if user else None
 
-    async def get_user_info(self, user_id: UUID) -> User | None:
+    async def get_user_field(self, user_id: UUID) -> User | None:
         user_model = await self.user_repo.get_by_id(user_id)
         return user_model
 
-    async def update_username(self, user_id: UUID, new_username: str) -> bool:
+    async def change_username(self, user_id: UUID, new_username: str) -> bool:
+        existing_user_id = await self.get_user_id_by_username(new_username)
+        if existing_user_id is not None and existing_user_id != user_id:
+            raise UsernameAlreadyTakenException()
         return await self.user_repo.change_username(user_id, new_username)
 
     async def change_password(self, user_id: UUID, password: str, password_repeat: str) -> bool:
@@ -72,14 +75,14 @@ class UserService:
             validate_email(email, check_deliverability=False)
         except EmailNotValidError:
             raise EmailFormatException()
+        if password != password_repeat:
+            raise PasswordsDontMatchException()
         user_id = await self.get_user_id_by_username(username)
         if user_id is not None:
             raise UsernameAlreadyTakenException()
         user_id = await self.get_user_id_by_email(email)
         if user_id:
             return None
-        if password != password_repeat:
-            raise PasswordsDontMatchException()
         user_field = await self.user_repo.create_user(username=username, email=email, password=password)
         return user_field.id if user_field else None
 
