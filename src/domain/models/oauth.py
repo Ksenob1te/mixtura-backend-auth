@@ -7,12 +7,15 @@ class Provider(Enum, str):
     DISCORD = "discord"
     TWITCH = "twitch"
 
+
 class OAuthRequest(BaseModel):
     provider: Provider
+
 
 class OAuthConfirm(BaseModel):
     provider: Provider
     code: str
+
 
 class OAuthRedirect(BaseModel):
     provider: Provider

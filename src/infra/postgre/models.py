@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from uuid import uuid4, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ForeignKey, func, Index
 from . import Base
 
 
@@ -19,8 +19,13 @@ class User(Base):
 
     providers: Mapped[List["UserProvider"]] = relationship(back_populates="user", lazy="selectin")
 
+    __table_args__ = (
+        Index("user_username_lower_idx", func.lower(username), unique=True),
+    )
+
     def __repr__(self) -> str:
         return f"User(id={self.id})"
+
 
 class UserProvider(Base):
     __tablename__ = "user_provider_table"

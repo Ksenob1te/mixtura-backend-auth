@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from ..models import User
@@ -26,14 +26,18 @@ class UserRepository:
         return await self.session.scalar(stmt)
 
     async def get_by_username(self, username: str) -> User | None:
-        stmt = select(User).where(User.username == username).limit(1)
+        stmt = select(User).where(func.lower(User.username) == username.lower()).limit(1)
         return await self.session.scalar(stmt)
 
     async def create_user(self, username: str, email: str, password: str) -> User:
-        user = User(username=username, email=email, hashed_password=await self._hash_password(password))
+        user = User(
+            username=username,
+            email=email,
+            hashed_password=await self._hash_password(password)
+        )
         self.session.add(user)
         await self.session.flush()
-        return await self.get_by_id(user.id)
+        return await self.get_by_id(user.id)  # type: ignore
 
     async def change_username(self, user_id: UUID, new_username: str) -> bool:
         stmt = update(User).where(User.id == user_id).values(username=new_username)
@@ -46,6 +50,3 @@ class UserRepository:
         result = await self.session.execute(stmt)
         await self.session.flush()
         return result.rowcount == 1
-
-
-

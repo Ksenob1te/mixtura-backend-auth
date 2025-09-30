@@ -3,11 +3,7 @@ from src.infra.redis import RedisRepository
 from src.infra.smtp import SMTPRepository
 import random
 import string
-from typing import Optional, List
-from uuid import UUID, uuid4
-from email_validator import validate_email, EmailNotValidError
 
-from ..models import UserModel
 from ..exceptions import ExceedRetryLimitException
 
 
@@ -24,12 +20,14 @@ class MailService:
 
     async def verify_access(self, email: str, code: str) -> bool:
         stored_code = await self.redis_repo.get_email_code(email)
-        if stored_code is None:
-            return False
         counter = await self.redis_repo.get_email_counter(email)
+        if stored_code is None or counter is None:
+            return False
         if counter >= 3:
+            # invalid the code as it cannot be used anymore
+            await self.remove_access_code(email)
             raise ExceedRetryLimitException()
-        if stored_code and stored_code == code:
+        if stored_code == code:
             return True
         await self.redis_repo.increment_email_counter(email)
         return False

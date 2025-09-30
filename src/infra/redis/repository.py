@@ -10,7 +10,7 @@ class RedisRepository:
         self.redis = redis
 
     async def _get_dict_by_key(self, key: str) -> dict | None:
-        response = await self.redis.hgetall(key)
+        response = await self.redis.hgetall(key)  # type: ignore
         if not response:
             return None
         return {k.decode() if isinstance(k, bytes) else k: v.decode() if isinstance(v, bytes) else v for k, v in
@@ -28,11 +28,11 @@ class RedisRepository:
 
     async def _extend_user_set(self, user_id: UUID, token: str) -> None:
         key = f"user::session::{user_id}"
-        await self.redis.sadd(key, token)
+        await self.redis.sadd(key, token)  # type: ignore
 
     async def _remove_from_user_set(self, user_id: UUID, token: str) -> None:
         key = f"user::session::{user_id}"
-        await self.redis.srem(key, token)
+        await self.redis.srem(key, token)  # type: ignore
 
     async def set_user_cookie(self, token: str, user_id: UUID, expire: timedelta = timedelta(days=30)) -> None:
         key = f"cookie::{token}"
@@ -49,31 +49,31 @@ class RedisRepository:
 
     async def get_all_user_cookies(self, user_id: UUID) -> list[str]:
         key = f"user::session::{user_id}"
-        tokens = await self.redis.smembers(key)
+        tokens = await self.redis.smembers(key)  # type: ignore
         if not tokens:
             return []
         return [token.decode() if isinstance(token, bytes) else token for token in tokens]
 
-    async def revoke_all_user_cookies(self, user_id: UUID, exclude: None | str | list[str] = None) -> None:
+    async def revoke_all_user_cookies(self, user_id: UUID, exclude_token: None | str | list[str] = None) -> None:
         key = f"user::session::{user_id}"
-        tokens = await self.redis.smembers(key)
+        tokens = await self.redis.smembers(key)  # type: ignore
         if not tokens:
             return
         tokens_to_delete = []
         for token in tokens:
             token_str = token.decode() if isinstance(token, bytes) else token
             if (
-                    exclude is None or
-                    (isinstance(exclude, str) and token_str != exclude) or
-                    (isinstance(exclude, list) and token_str not in exclude)
+                    exclude_token is None or
+                    (isinstance(exclude_token, str) and token_str != exclude_token) or
+                    (isinstance(exclude_token, list) and token_str not in exclude_token)
             ):
                 tokens_to_delete.append(token_str)
         if tokens_to_delete:
             await self.redis.delete(*[f"cookie::{token}" for token in tokens_to_delete])
-            if exclude is None:
+            if exclude_token is None:
                 await self.redis.delete(key)
             else:
-                await self.redis.srem(key, *tokens_to_delete)
+                await self.redis.srem(key, *tokens_to_delete)  # type: ignore
 
     async def get_email_code(self, email: str) -> str | None:
         key = f"email::verify::{email}"
@@ -88,12 +88,12 @@ class RedisRepository:
 
     async def increment_email_counter(self, email: str) -> int:
         key = f"email::verify::{email}"
-        return await self.redis.hincrby(key, "count", 1)
+        return await self.redis.hincrby(key, "count", 1)  # type: ignore
 
     async def assign_email_code(self, email: str, code: str, expire: timedelta = timedelta(minutes=10)) -> None:
         key = f"email::verify::{email}"
 
-        await self.redis.hset(key, mapping={"code": code, "count": 0})
+        await self.redis.hset(key, mapping={"code": code, "count": 0})  # type: ignore
         await self.redis.expire(key, expire)
 
     async def remove_email_code(self, email: str) -> None:

@@ -13,11 +13,14 @@ class StatusResponse(BaseModel):
 class VerifyResponse(BaseModel):
     status: str = Field(default="ok")
     verified: bool = Field(default=False)
+
+
 class Provider(BaseModel):
     icon_url: str
     display_name: str
     redirect_uri: str
     use_in_auth: bool
+
 
 class Providers(BaseModel):
     email_enabled: bool
