@@ -79,6 +79,7 @@ class PasswordsDontMatchException(HTTPException):
             }
         )
 
+
 class NotFoundProviderException(HTTPException):
     def __init__(self):
         super().__init__(
@@ -89,6 +90,7 @@ class NotFoundProviderException(HTTPException):
             }
         )
 
+
 class WrongOAuthCodeException(HTTPException):
     def __init__(self):
         super().__init__(
@@ -98,6 +100,8 @@ class WrongOAuthCodeException(HTTPException):
                 "message": "Given code not correct"
             }
         )
+
+
 class NotEnabledForAuthProviderException(HTTPException):
     def __init__(self):
         super().__init__(
@@ -107,6 +111,7 @@ class NotEnabledForAuthProviderException(HTTPException):
                 "message": "Provider only for integration"
             }
         )
+
 
 class InternalLogicException(HTTPException):
     def __init__(self, message: str):

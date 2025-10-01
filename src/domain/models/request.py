@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, field_validator, EmailStr
 
 
-class UpdateUserRequest(BaseModel):
+class UsernameRequest(BaseModel):
     username: str = Field(min_length=4, max_length=16)
 
 

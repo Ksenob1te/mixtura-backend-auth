@@ -13,7 +13,7 @@ class UserService:
         self.provider_repo = provider_repo
         self.redis_repo = redis_repo
 
-    async def validate_user_token(self, token: str | None) -> bool:
+    async def validate_user_token(self, token: str | None) -> bool: # 123
         if not token:
             return False
         session_data = await self.redis_repo.get_user_by_cookie(token)
@@ -41,6 +41,10 @@ class UserService:
     async def get_user_field(self, user_id: UUID) -> User | None:
         user_model = await self.user_repo.get_by_id(user_id)
         return user_model
+
+    async def username_available(self, username: str) -> bool:
+        user = await self.user_repo.get_by_username(username)
+        return user is None
 
     async def change_username(self, user_id: UUID, new_username: str) -> bool:
         existing_user_id = await self.get_user_id_by_username(new_username)
@@ -85,5 +89,3 @@ class UserService:
             return None
         user_field = await self.user_repo.create_user(username=username, email=email, password=password)
         return user_field.id if user_field else None
-
-    # todo: endpoint to check username availability

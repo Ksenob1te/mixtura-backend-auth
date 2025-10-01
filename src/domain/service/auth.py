@@ -7,7 +7,8 @@ class AuthService:
     def __init__(self) -> None:
         pass
 
-    def build_auth_redirect(self, auth_url: str, client_id: str, scopes: list, redirect_uri: str):
+    @staticmethod
+    def build_auth_redirect(auth_url: str, client_id: str, scopes: list, redirect_uri: str):
         params = {
             "client_id": client_id,
             "response_type": "code",  # стандартный response_type для Authorization Code Flow

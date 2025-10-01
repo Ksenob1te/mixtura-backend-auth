@@ -1,7 +1,4 @@
 from src.env_config import env
-from typing import Optional
-from datetime import timedelta
-from uuid import UUID
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.header import Header
@@ -25,5 +22,5 @@ class SMTPRepository:
         msg = MIMEText(body_html, 'html', 'utf-8')
         msg["From"] = formataddr(("Mixtura", self.source_email))
         msg['To'] = to_email
-        msg['Subject'] = Header("Mixtura Verification Code", 'utf-8')
+        msg['Subject'] = Header("Mixtura Verification Code", 'utf-8')   # type: ignore
         await self.smtp.sendmail(self.source_email, to_email, msg.as_string())

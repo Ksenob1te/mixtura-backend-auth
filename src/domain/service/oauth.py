@@ -100,13 +100,15 @@ class OAuthService:
 
         return self.user_parsers[provider](user_data)
 
-    def _parse_discord_user(self, data: dict[str, Any]) -> dict[str, Any]:
+    @staticmethod
+    def _parse_discord_user(data: dict[str, Any]) -> dict[str, Any]:
         return {
             "id": data["id"],
             "username": f"{data['username']}"
         }
 
-    def _parse_twitch_user(self, data: dict[str, Any]) -> dict[str, Any]:
+    @staticmethod
+    def _parse_twitch_user(data: dict[str, Any]) -> dict[str, Any]:
         if "data" in data and len(data["data"]) > 0:
             user = data["data"][0]
             return {
@@ -115,7 +117,8 @@ class OAuthService:
             }
         return {"id": None, "username": None, "email": None}
 
-    def _parse_battlenet_user(self, data: dict[str, Any]) -> dict[str, Any]:
+    @staticmethod
+    def _parse_battlenet_user(data: dict[str, Any]) -> dict[str, Any]:
         return {
             "id": str(data.get("id")),
             "username": data.get("battletag", "")

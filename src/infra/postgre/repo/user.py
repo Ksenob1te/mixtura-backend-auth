@@ -26,8 +26,7 @@ class UserRepository:
         return await self.session.scalar(stmt)
 
     async def get_by_username(self, username: str) -> User | None:
-        stmt = select(User).where(func.lower(User.username)
-                                  == username.lower()).limit(1)
+        stmt = select(User).where(func.lower(User.username) == username.lower()).limit(1)   # type: ignore
         return await self.session.scalar(stmt)
 
     async def create_user(self, username: str, email: str | None, password: str) -> User:

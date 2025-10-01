@@ -10,6 +10,11 @@ class StatusResponse(BaseModel):
     status: str = Field(default="ok")
 
 
+class BusyResponse(BaseModel):
+    status: str = Field(default="ok")
+    busy: bool = Field(default=True)
+
+
 class VerifyResponse(BaseModel):
     status: str = Field(default="ok")
     verified: bool = Field(default=False)

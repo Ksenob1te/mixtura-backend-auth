@@ -8,7 +8,7 @@ class LocalSettings(BaseSettings):
 
 class RedisConfig(LocalSettings):
     host: str = Field(default="localhost", alias="REDIS_HOST")
-    port: int = Field(default="6379", alias="REDIS_PORT")
+    port: int = Field(default=6379, alias="REDIS_PORT")
     user: str = Field(default="default", alias="REDIS_USER")
     password: str = Field(alias="REDIS_PASSWORD")
 
@@ -43,7 +43,7 @@ class SMTPConfig(LocalSettings):
 
 class PostgresConfig(LocalSettings):
     host: str = Field(default="localhost", alias="POSTGRES_HOST")
-    port: int = Field(default="5432", alias="POSTGRES_PORT")
+    port: int = Field(default=5432, alias="POSTGRES_PORT")
     user: str = Field(default="postgres", alias="POSTGRES_USER")
     password: str = Field(default="pgAdminPassword", alias="POSTGRES_PASSWORD")
     db: str = Field(default="mixtura-auth", alias="POSTGRES_DB")
@@ -59,10 +59,10 @@ class ServerConfig(LocalSettings):
 
 
 class Env(LocalSettings):
-    postgres: PostgresConfig = Field(default_factory=PostgresConfig)
-    redis: RedisConfig = Field(default_factory=RedisConfig)
-    server: ServerConfig = Field(default_factory=ServerConfig)
-    smtp: SMTPConfig = Field(default_factory=SMTPConfig)
+    postgres: PostgresConfig = Field(default_factory=PostgresConfig)    # type: ignore
+    server: ServerConfig = Field(default_factory=ServerConfig)          # type: ignore
+    smtp: SMTPConfig = Field(default_factory=SMTPConfig)                # type: ignore
+    redis: RedisConfig = Field(default_factory=RedisConfig)             # type: ignore
 
     @classmethod
     def load(cls) -> "Env":

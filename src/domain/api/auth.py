@@ -44,7 +44,8 @@ class AuthController(Controller):
         return user_field
 
     @put("/user", response_model=UpdateResponse)
-    async def update_username(self, request: Request, data: UpdateUserRequest) -> UpdateResponse:
+    async def update_username(self, request: Request, data: UsernameRequest) -> UpdateResponse:
+        # todo: add regex username validation
         user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
         ok = await self.user_service.change_username(user_uuid, data.username)
         return UpdateResponse(updated=ok)
@@ -136,3 +137,7 @@ class AuthController(Controller):
             token = await self.oauth_service.authorize(req.provider, req.code)
             response.set_cookie("token", token, httponly=True)
         return StatusResponse()
+
+    @post("/check", response_model=BusyResponse)
+    async def check(self, data: UsernameRequest) -> BusyResponse:
+        return BusyResponse(busy=not await self.user_service.username_available(data.username))
