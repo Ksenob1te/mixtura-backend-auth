@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 import httpx
 from typing import Any
 
+from src.domain.exceptions import InternalLogicException, NotEnabledForAuthProviderException, NotFoundProviderException, WrongOAuthCodeException
 from src.infra.postgre.repo.provider import ProviderRepository
 from src.infra.postgre.repo.user import UserRepository
 from src.infra.redis.repository import RedisRepository
@@ -27,12 +28,11 @@ class OAuthService:
 
     async def authorize(self, provider: str, code: str) -> str:
         if provider not in PROVIDERS.oauth_providers:
-            raise ValueError(f"Unknown provider: {provider}")
+            raise NotFoundProviderException()
         if PROVIDERS.oauth_providers[provider].enabled is False:
-            raise ValueError(f"Provider {provider} is disabled")
+            raise NotFoundProviderException()
         if PROVIDERS.oauth_providers[provider].use_in_auth is False:
-            raise ValueError(
-                f"Provider {provider} is not enabled for authorization")
+            raise NotEnabledForAuthProviderException()
 
         provider_info = await self.process_callback(provider, code)
         user_provider = await self.provider_repository.get_by_client_and_provider_name(provider_info["id"], provider)
@@ -49,9 +49,9 @@ class OAuthService:
 
     async def add_integration(self, user_id: UUID, provider: str, code: str) -> bool:
         if provider not in PROVIDERS.oauth_providers:
-            raise ValueError(f"Unknown provider: {provider}")
+            raise NotFoundProviderException()
         if PROVIDERS.oauth_providers[provider].enabled is False:
-            raise ValueError(f"Provider {provider} is disabled")
+            raise NotFoundProviderException()
         provider_info = await self.process_callback(provider, code)
 
         user_provider = await self.provider_repository.get_by_client_and_provider_name(provider_info["id"], provider)
@@ -83,7 +83,7 @@ class OAuthService:
 
             access_token = token_data.get("access_token")
             if not access_token:
-                raise ValueError(f"Failed to get access_token: {token_data}")
+                raise WrongOAuthCodeException()
 
             # 2. Запрос профиля
             headers = {"Authorization": f"Bearer {access_token}"}
@@ -96,7 +96,7 @@ class OAuthService:
 
         # 3. Нормализуем профиль
         if provider not in self.user_parsers:
-            raise ValueError(f"No parser for provider {provider}")
+            raise InternalLogicException(f"No parser for provider {provider}")
 
         return self.user_parsers[provider](user_data)
 

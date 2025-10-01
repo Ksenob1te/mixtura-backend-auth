@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, \
-    HTTP_500_INTERNAL_SERVER_ERROR
+    HTTP_500_INTERNAL_SERVER_ERROR, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 
 class NotAuthorizedException(HTTPException):
@@ -79,6 +79,34 @@ class PasswordsDontMatchException(HTTPException):
             }
         )
 
+class NotFoundProviderException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=HTTP_404_NOT_FOUND,
+            detail={
+                "status": "error",
+                "message": "Provider not found"
+            }
+        )
+
+class WrongOAuthCodeException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=HTTP_404_NOT_FOUND,
+            detail={
+                "status": "error",
+                "message": "Given code not correct"
+            }
+        )
+class NotEnabledForAuthProviderException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=HTTP_403_FORBIDDEN,
+            detail={
+                "status": "error",
+                "message": "Provider only for integration"
+            }
+        )
 
 class InternalLogicException(HTTPException):
     def __init__(self, message: str):
