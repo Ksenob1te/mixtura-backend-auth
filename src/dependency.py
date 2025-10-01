@@ -80,5 +80,9 @@ async def get_auth_service():
     return AuthService()
 
 
-async def get_oauth_service():
-    return OAuthService()
+async def get_oauth_service(
+        user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+        provider_repo: Annotated[ProviderRepository, Depends(get_provider_repository)],
+        redis_repo: Annotated[RedisRepository, Depends(get_redis_repository)]
+):
+    return OAuthService(user_repo, provider_repo, redis_repo)

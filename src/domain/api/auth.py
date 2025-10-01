@@ -7,7 +7,7 @@ from ..service.auth import AuthService
 from ..service.oauth import OAuthService
 from ..service import UserService, MailService
 from ..models import *
-from ..exceptions import AlreadyAuthorizedException, InternalLogicException
+from ..exceptions import AlreadyAuthorizedException, InternalLogicException, NotAuthorizedException
 
 from src.infra.postgre import User
 
@@ -38,7 +38,8 @@ class AuthController(Controller):
         user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
         user_field = await self.user_service.get_user_field(user_uuid)
         if user_field is None:
-            self.logger.warning("User authorized, but not found in DB, id=%s", user_uuid)
+            self.logger.warning(
+                "User authorized, but not found in DB, id=%s", user_uuid)
             raise InternalLogicException("User not found")
         return user_field
 
@@ -127,5 +128,11 @@ class AuthController(Controller):
         return self.auth_service.get_providers()
 
     @post("/callback")
-    async def callback(self, req: OAuthConfirm, request: Request):
-        pass
+    async def callback(self, req: OAuthConfirm, request: Request, response: Response):
+        try:
+            user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
+            await self.oauth_service.add_integration(user_uuid, req.provider, req.code)
+        except NotAuthorizedException:
+            token = await self.oauth_service.authorize(req.provider, req.code)
+            response.set_cookie("token", token, httponly=True)
+        return StatusResponse()
