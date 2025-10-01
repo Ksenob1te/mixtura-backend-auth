@@ -78,6 +78,7 @@ class AuthController(Controller):
 
     @post("/reset/confirm", response_model=VerifyResponse)
     async def confirm_reset(self, request: Request, data: PasswordConfirmRequest) -> VerifyResponse:
+        # todo: add regex password validation
         verified = await self.mail_service.verify_access(str(data.email), data.token)
         if verified:
             user_id = await self.user_service.get_user_id_by_email(str(data.email))
@@ -105,6 +106,7 @@ class AuthController(Controller):
         return VerifyResponse(verified=verified)
 
     @post("/signup/confirm", response_model=VerifyResponse)
+    # todo: add regex password validation
     async def confirm_sign_up(self, request: Request, data: SignupConfirmRequest, response: Response) -> VerifyResponse:
         if not PROVIDERS.email_enabled:
             raise InternalLogicException("Email sign up is disabled")
