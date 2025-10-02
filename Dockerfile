@@ -1,6 +1,6 @@
 FROM python:3.13-slim
 
-WORKDIR /app
+WORKDIR /mixtura-auth
 
 COPY pyproject.toml ./
 
@@ -12,4 +12,4 @@ COPY . .
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "main.py"]
+CMD ["sh", "-c", "alembic revision --autogenerate && alembic upgrade head && python start.py"]

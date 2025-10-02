@@ -44,9 +44,9 @@ class AuthController(Controller):
         return user_field
 
     @put("/user", response_model=UpdateResponse)
-    # todo: do patch here instead of put
+    # TODO: do patch here instead of put
     async def update_username(self, request: Request, data: UsernameRequest) -> UpdateResponse:
-        # todo: add regex username validation
+        # TODO: add regex username validation
         user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
         ok = await self.user_service.change_username(user_uuid, data.username)
         return UpdateResponse(updated=ok)
@@ -56,7 +56,7 @@ class AuthController(Controller):
         if await self.user_service.validate_user_token(request.cookies.get("token", None)):
             raise AlreadyAuthorizedException()
         token = await self.user_service.sign_in(data.login, data.password)
-        response.set_cookie("token", token, httponly=True)
+        response.set_cookie("token", token, httponly=True, max_age=60 * 60 * 24 * 30)
         return StatusResponse()
 
     @post("/signout", response_model=StatusResponse)
@@ -79,7 +79,7 @@ class AuthController(Controller):
 
     @post("/reset/confirm", response_model=VerifyResponse)
     async def confirm_reset(self, request: Request, data: PasswordConfirmRequest) -> VerifyResponse:
-        # todo: add regex password validation
+        # TODO: add regex password validation
         verified = await self.mail_service.verify_access(str(data.email), data.token)
         if verified:
             user_id = await self.user_service.get_user_id_by_email(str(data.email))
@@ -107,7 +107,7 @@ class AuthController(Controller):
         return VerifyResponse(verified=verified)
 
     @post("/signup/confirm", response_model=VerifyResponse)
-    # todo: add regex password validation
+    # TODO: add regex password validation
     async def confirm_sign_up(self, request: Request, data: SignupConfirmRequest, response: Response) -> VerifyResponse:
         if not PROVIDERS.email_enabled:
             raise InternalLogicException("Email sign up is disabled")
@@ -124,7 +124,7 @@ class AuthController(Controller):
             await self.mail_service.remove_access_code(str(data.email))
             if not await self.user_service.validate_user_token(request.cookies.get("token", None)):
                 token = await self.user_service.sign_in(str(data.email), data.password)
-                response.set_cookie("token", token, httponly=True)
+                response.set_cookie("token", token, httponly=True, max_age=60 * 60 * 24 * 30)
         return VerifyResponse(verified=verified)
 
     @get("/providers", response_model=Providers)
@@ -138,7 +138,7 @@ class AuthController(Controller):
             await self.oauth_service.add_integration(user_uuid, req.provider, req.code)
         except NotAuthorizedException:
             token = await self.oauth_service.authorize(req.provider, req.code)
-            response.set_cookie("token", token, httponly=True)
+            response.set_cookie("token", token, httponly=True, max_age=60 * 60 * 24 * 30)
         return StatusResponse()
 
     @post("/check", response_model=BusyResponse)
