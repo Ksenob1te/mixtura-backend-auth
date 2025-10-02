@@ -44,6 +44,7 @@ class AuthController(Controller):
         return user_field
 
     @put("/user", response_model=UpdateResponse)
+    # todo: do patch here instead of put
     async def update_username(self, request: Request, data: UsernameRequest) -> UpdateResponse:
         # todo: add regex username validation
         user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
