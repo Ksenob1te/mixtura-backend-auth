@@ -8,7 +8,7 @@ from src.infra.postgre.repo.provider import ProviderRepository
 from src.infra.postgre.repo.user import UserRepository
 from src.infra.redis.repository import RedisRepository
 from src.providers_config import PROVIDERS
-
+from src.env_config import env
 
 class OAuthService:
     def __init__(self,
@@ -64,7 +64,7 @@ class OAuthService:
     async def process_callback(self, provider: str, code: str) -> dict[str, Any]:
         config = PROVIDERS.oauth_providers[provider]
 
-        async with httpx.AsyncClient(proxy="http://127.0.0.1:10808") as client:
+        async with httpx.AsyncClient(proxy=env.server.proxy) as client:
             # 1. Обмен code -> access_token
             token_resp = await client.post(
                 config.token_url,

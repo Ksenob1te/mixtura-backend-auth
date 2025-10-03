@@ -56,6 +56,7 @@ class PostgresConfig(LocalSettings):
 class ServerConfig(LocalSettings):
     host: str = Field(default="0.0.0.0", alias="SERVER_HOST")
     port: int = Field(default=8000, alias="SERVER_PORT")
+    proxy: str | None = Field(default=None, alias="SERVER_PROXY")
 
 
 class Env(LocalSettings):

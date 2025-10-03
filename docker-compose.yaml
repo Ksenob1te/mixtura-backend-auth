@@ -19,6 +19,7 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_DOMAIN: ${SMTP_DOMAIN}
+      SERVER_PROXY: ${SERVER_PROXY:-}
     volumes:
       - ./.local/mixtura-auth:/mixtura-auth/.local
       - ./.local/migrations-auth:/mixtura-auth/alembic/versions
