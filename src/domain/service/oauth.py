@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 import httpx
 from typing import Any
 
-from src.domain.exceptions import InternalLogicException, NotEnabledForAuthProviderException, NotFoundProviderException, WrongOAuthCodeException
+from src.domain.exceptions import IntegrationLimitException, InternalLogicException, NotEnabledForAuthProviderException, NotFoundProviderException, ProviderAlreadyLinkedException, WrongOAuthCodeException
 from src.infra.postgre.repo.provider import ProviderRepository
 from src.infra.postgre.repo.user import UserRepository
 from src.infra.redis.repository import RedisRepository
@@ -47,19 +47,21 @@ class OAuthService:
         await self.redis_repository.set_user_cookie(token, user.id)
         return token
 
-    async def add_integration(self, user_id: UUID, provider: str, code: str) -> bool:
+    async def add_integration(self, user_id: UUID, provider: str, code: str):
         if provider not in PROVIDERS.oauth_providers:
             raise NotFoundProviderException()
         if PROVIDERS.oauth_providers[provider].enabled is False:
             raise NotFoundProviderException()
+        provider_config = PROVIDERS.oauth_providers[provider]
         provider_info = await self.process_callback(provider, code)
 
         user_provider = await self.provider_repository.get_by_client_and_provider_name(provider_info["id"], provider)
-        if user_provider is None:
-            await self.provider_repository.create_provider(provider, provider_info["id"], user_id, provider_info["username"])
-        else:
-            return False
-        return True
+        if user_provider is not None:
+            raise ProviderAlreadyLinkedException()
+        user_providers = await self.provider_repository.get_by_user_and_provider_name(user_id, provider)
+        if len(user_providers) >= provider_config.count_limit:
+            raise IntegrationLimitException()
+        await self.provider_repository.create_provider(provider, provider_info["id"], user_id, provider_info["username"])
 
     async def process_callback(self, provider: str, code: str) -> dict[str, Any]:
         config = PROVIDERS.oauth_providers[provider]

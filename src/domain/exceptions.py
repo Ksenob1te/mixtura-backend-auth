@@ -90,6 +90,25 @@ class NotFoundProviderException(HTTPException):
             }
         )
 
+class ProviderAlreadyLinkedException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail={
+                "status": "error",
+                "message": "Provider already linked"
+            }
+        )
+
+class IntegrationLimitException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail={
+                "status": "error",
+                "message": "Integration limit exceeded"
+            }
+        )
 
 class WrongOAuthCodeException(HTTPException):
     def __init__(self):

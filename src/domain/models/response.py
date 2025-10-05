@@ -26,6 +26,7 @@ class Provider(BaseModel):
     display_name: str
     redirect_uri: str
     use_in_auth: bool
+    limit: int
 
 
 class Providers(BaseModel):

@@ -19,6 +19,7 @@ class OAuthProviderConfig(BaseModel):
     scopes: List[str] = []
     use_in_auth: bool = False
     enabled: bool = False
+    count_limit: int = 1
 
 
 class ProvidersConfig(BaseSettings):
@@ -34,7 +35,8 @@ class ProvidersConfig(BaseSettings):
                 client_id="your_discord_client_id",
                 client_secret="your_discord_client_secret",
                 redirect_uri="https://yourapp.com/oauth/callback/discord",
-                scopes=["identify", "email"]
+                scopes=["identify", "email"],
+                count_limit=1
             ),
             "twitch": OAuthProviderConfig(
                 display_name="Twitch",
@@ -45,7 +47,8 @@ class ProvidersConfig(BaseSettings):
                 client_id="your_twitch_client_id",
                 client_secret="your_twitch_client_secret",
                 redirect_uri="https://yourapp.com/oauth/callback/twitch",
-                scopes=["user:read:email"]
+                scopes=["user:read:email"],
+                count_limit=1
             ),
             "battlenet": OAuthProviderConfig(
                 display_name="Battle.net",
@@ -56,7 +59,8 @@ class ProvidersConfig(BaseSettings):
                 client_id="your_battlenet_client_id",
                 client_secret="your_battlenet_client_secret",
                 redirect_uri="https://yourapp.com/oauth/callback/battlenet",
-                scopes=["openid", "profile"]
+                scopes=["openid", "profile"],
+                count_limit=10
             ),
         }
     )

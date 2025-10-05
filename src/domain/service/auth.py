@@ -30,7 +30,8 @@ class AuthService:
                     "icon_url": provider.icon_url,
                     "display_name": provider.display_name,
                     "redirect_uri": self.build_auth_redirect(provider.auth_url, provider.client_id, provider.scopes, provider.redirect_uri),
-                    "use_in_auth": provider.use_in_auth
+                    "use_in_auth": provider.use_in_auth,
+                    "limit": provider.count_limit
                 } for k, provider in filter(lambda x: x[1].enabled, PROVIDERS.oauth_providers.items())
             ]
         })
