@@ -37,7 +37,7 @@ class UserProvider(Base):
     client_username: Mapped[Optional[str]] = mapped_column(nullable=True)
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user_table.id"), nullable=False)
-    user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship(lazy="selectin")
 
     def __repr__(self) -> str:
         return (f"Provider(id={self.id}, name={self.name},"
