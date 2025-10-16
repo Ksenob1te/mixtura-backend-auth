@@ -15,6 +15,8 @@ class UserRepository:
 
     @staticmethod
     async def check_password(user: User, password: str) -> bool:
+        if not user.hashed_password:
+            return False
         return bcrypt.checkpw(password.encode(), user.hashed_password.encode())
 
     async def get_by_id(self, user_id: UUID) -> User | None:

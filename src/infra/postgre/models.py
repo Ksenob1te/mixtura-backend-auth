@@ -12,9 +12,8 @@ class User(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     username: Mapped[Optional[str]] = mapped_column(nullable=True)
-    # TODO: verify if email should be nullable - oauth user creating pipeline now assumes nullable=True
-    email: Mapped[str] = mapped_column(nullable=False, unique=True)
-    hashed_password: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[Optional[str]] = mapped_column(nullable=True, unique=True)
+    hashed_password: Mapped[Optional[str]] = mapped_column(nullable=True)
 
     registration_date: Mapped[datetime.datetime] = mapped_column(nullable=False, default=func.now())
 
