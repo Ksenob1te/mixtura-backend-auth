@@ -1,9 +1,11 @@
 from enum import Enum
 from pydantic import BaseModel, Field, field_validator, EmailStr
 
+from src.domain.constants import PASSWORD_REGEX, USERNAME_REGEX
+
 
 class UsernameRequest(BaseModel):
-    username: str = Field(min_length=4, max_length=16)
+    username: str = Field(min_length=3, max_length=50, pattern=USERNAME_REGEX)
 
 
 def strip_and_lower(v: object) -> str:
@@ -32,8 +34,8 @@ class EmailVerifyRequest(BaseModel):
 class PasswordConfirmRequest(BaseModel):
     email: EmailStr
     token: str
-    password: str
-    repeat_password: str
+    password: str = Field(pattern=PASSWORD_REGEX, min_length=6, max_length=32)
+    repeat_password: str = Field(pattern=PASSWORD_REGEX, min_length=6, max_length=32)
 
     @field_validator("email")
     @classmethod
@@ -43,10 +45,10 @@ class PasswordConfirmRequest(BaseModel):
 
 class SignupConfirmRequest(BaseModel):
     email: EmailStr
-    username: str
+    username: str = Field(min_length=3, max_length=50, pattern=USERNAME_REGEX)
     token: str
-    password: str
-    repeat_password: str
+    password: str = Field(pattern=PASSWORD_REGEX, min_length=6, max_length=32)
+    repeat_password: str = Field(pattern=PASSWORD_REGEX, min_length=6, max_length=32)
 
     @field_validator("email")
     @classmethod
