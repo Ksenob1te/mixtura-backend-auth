@@ -28,8 +28,8 @@ async def lifespan(app: FastAPI):
         await redis_engine.close()
 
 app = FastAPI(
-    docs_url="/api/docs",
-    openapi_url="/api/openapi.json",
+    docs_url="/api/auth/docs",
+    openapi_url="/api/auth/openapi.json",
     title='Mixtura',
     version="2.0",
     middleware=[
