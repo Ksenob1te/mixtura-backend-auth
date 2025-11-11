@@ -41,6 +41,15 @@ class PasswordConfirmRequest(BaseModel):
     @classmethod
     def validate_email(cls, v: str) -> str:
         return strip_and_lower(v)
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not any(c.isalpha() for c in v):
+            raise ValueError('Password must contain at least one letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one digit')
+        return v
 
 
 class SignupConfirmRequest(BaseModel):
@@ -54,6 +63,15 @@ class SignupConfirmRequest(BaseModel):
     @classmethod
     def validate_email(cls, v: str) -> str:
         return strip_and_lower(v)
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not any(c.isalpha() for c in v):
+            raise ValueError('Password must contain at least one letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one digit')
+        return v
 
 
 class SignInRequest(BaseModel):
@@ -64,6 +82,15 @@ class SignInRequest(BaseModel):
     @classmethod
     def validate_login(cls, v: str) -> str:
         return strip_and_lower(v)
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not any(c.isalpha() for c in v):
+            raise ValueError('Password must contain at least one letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one digit')
+        return v
 
 
 class OAuthConfirm(BaseModel):
