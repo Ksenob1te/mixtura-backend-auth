@@ -90,6 +90,7 @@ class NotFoundProviderException(HTTPException):
             }
         )
 
+
 class ProviderAlreadyLinkedException(HTTPException):
     def __init__(self):
         super().__init__(
@@ -100,6 +101,7 @@ class ProviderAlreadyLinkedException(HTTPException):
             }
         )
 
+
 class IntegrationLimitException(HTTPException):
     def __init__(self):
         super().__init__(
@@ -109,6 +111,7 @@ class IntegrationLimitException(HTTPException):
                 "message": "Integration limit exceeded"
             }
         )
+
 
 class WrongOAuthCodeException(HTTPException):
     def __init__(self):
