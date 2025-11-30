@@ -1,143 +1,211 @@
-from fastapi import Depends, Request, Response
-from fastapi_controllers import Controller, get, post, put
-
-from src.providers_config import PROVIDERS
-
-from ..service.auth import AuthService
-from ..service.oauth import OAuthService
-from ..service import UserService, MailService
-from ..models import *
-from ..exceptions import AlreadyAuthorizedException, InternalLogicException, NotAuthorizedException
-
-from src.infra.postgre import User
-
-from typing import Annotated
-from src.dependency import get_auth_service, get_oauth_service, get_user_service, get_mail_service
-
 import logging
 
+from faststream.rabbit import RabbitRouter
 
-class AuthController(Controller):
-    prefix = "/auth"
-    tags = ["auth"]
+from src.dependency import (
+    AuthServiceDep,
+    MailServiceDep,
+    OAuthServiceDep,
+    UserServiceDep,
+)
+from src.providers_config import PROVIDERS
 
-    def __init__(self,
-                 user_service: Annotated[UserService, Depends(get_user_service)],
-                 mail_service: Annotated[MailService, Depends(get_mail_service)],
-                 auth_service: Annotated[AuthService, Depends(get_auth_service)],
-                 oauth_service: Annotated[OAuthService, Depends(get_oauth_service)]) -> None:
-        super().__init__()
-        self.user_service = user_service
-        self.mail_service = mail_service
-        self.logger = logging.getLogger(__name__)
-        self.auth_service = auth_service
-        self.oauth_service = oauth_service
+from ..exceptions import InternalLogicException
+from ..models import (
+    AuthCheckResponse,
+    BusyResponse,
+    EmailRequest,
+    EmailVerifyRequest,
+    ErrorResponse,
+    OAuthConfirmRequest,
+    PasswordConfirmRequest,
+    ProvidersResponse,
+    ResponseMessage,
+    SignInRequest,
+    SignupConfirmRequest,
+    StatusResponse,
+    TokenRequest,
+    TokenResponse,
+    UpdateResponse,
+    UsernameRequest,
+    UsernameUpdateRequest,
+    UserResponse,
+    VerifyResponse,
+)
 
-    @get("/user", response_model=UserModel)
-    async def get_user_info(self, request: Request) -> User:
-        user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
-        user_field = await self.user_service.get_user_field(user_uuid)
-        if user_field is None:
-            self.logger.warning(
-                "User authorized, but not found in DB, id=%s", user_uuid)
-            raise InternalLogicException("User not found")
-        return user_field
+router = RabbitRouter(prefix=".")
+logger = logging.getLogger(__name__)
 
-    @put("/user", response_model=UpdateResponse)
-    # TODO: do patch here instead of put
-    async def update_username(self, request: Request, data: UsernameRequest) -> UpdateResponse:
-        user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
-        ok = await self.user_service.change_username(user_uuid, data.username)
-        return UpdateResponse(updated=ok)
 
-    @post("/signin", response_model=StatusResponse)
-    async def sign_in(self, request: Request, data: SignInRequest, response: Response) -> StatusResponse:
-        if await self.user_service.validate_user_token(request.cookies.get("token", None)):
-            raise AlreadyAuthorizedException()
-        token = await self.user_service.sign_in(data.login, data.password)
-        response.set_cookie("token", token, httponly=True, max_age=60 * 60 * 24 * 30)
-        return StatusResponse()
+@router.subscriber(queue="get_auth_check")
+async def auth_check(
+    data: TokenRequest,
+    user_service: UserServiceDep,
+) -> ResponseMessage[AuthCheckResponse]:
+    user_uuid = await user_service.get_user_id(data.token)
+    return ResponseMessage(message=AuthCheckResponse(user_id=user_uuid), status=200)
 
-    @post("/signout", response_model=StatusResponse)
-    async def sign_out(self, request: Request, response: Response) -> StatusResponse:
-        response.delete_cookie("token")
-        await self.user_service.sign_out(request.cookies.get("token", None))
-        return StatusResponse()
 
-    @post("/reset", response_model=StatusResponse)
-    async def reset(self, data: EmailRequest) -> StatusResponse:
-        user_id = await self.user_service.get_user_id_by_email(str(data.email))
-        if user_id:
-            await self.mail_service.request_access(str(data.email))
-        return StatusResponse()
+@router.subscriber("get_user_info")
+async def get_user_info(
+    data: TokenRequest,
+    user_service: UserServiceDep,
+) -> ResponseMessage[UserResponse | ErrorResponse]:
+    user_uuid = await user_service.get_user_id(data.token)
+    user_field = await user_service.get_user_field(user_uuid)
+    if user_field is None:
+        logger.warning("User authorized, but not found in DB, id=%s", user_uuid)
+        raise InternalLogicException("User not found")
+    return ResponseMessage(message=UserResponse.model_validate(user_field), status=200)
 
-    @post("/reset/verify", response_model=VerifyResponse)
-    async def verify_reset(self, data: EmailVerifyRequest) -> VerifyResponse:
-        verified = await self.mail_service.verify_access(str(data.email), data.token)
-        return VerifyResponse(verified=verified)
 
-    @post("/reset/confirm", response_model=VerifyResponse)
-    async def confirm_reset(self, request: Request, data: PasswordConfirmRequest) -> VerifyResponse:
-        verified = await self.mail_service.verify_access(str(data.email), data.token)
-        if verified:
-            user_id = await self.user_service.get_user_id_by_email(str(data.email))
-            if user_id is None:
-                return VerifyResponse(verified=False)
-            await self.user_service.change_password(user_id, data.password, data.repeat_password)
-            await self.user_service.revoke_tokens(user_id, exclude_token=request.cookies.get("token", None))
-            await self.mail_service.remove_access_code(str(data.email))
-        return VerifyResponse(verified=verified)
+@router.subscriber("sign_in")
+async def sign_in(
+    data: SignInRequest,
+    user_service: UserServiceDep,
+) -> ResponseMessage[TokenResponse]:
+    token = await user_service.sign_in(data.login, data.password)
+    return ResponseMessage(
+        message=TokenResponse(token=token, expires=30 * 24 * 60 * 60), status=200
+    )
 
-    @post("/signup", response_model=StatusResponse)
-    async def sign_up(self, data: EmailRequest) -> StatusResponse:
-        if not PROVIDERS.email_enabled:
-            raise InternalLogicException("Email sign up is disabled")
-        existing_user_id = await self.user_service.get_user_id_by_email(str(data.email))
-        if not existing_user_id:
-            await self.mail_service.request_access(str(data.email))
-        return StatusResponse()
 
-    @post("/signup/verify", response_model=VerifyResponse)
-    async def verify_sign_up(self, data: EmailVerifyRequest) -> VerifyResponse:
-        if not PROVIDERS.email_enabled:
-            raise InternalLogicException("Email sign up is disabled")
-        verified = await self.mail_service.verify_access(str(data.email), data.token)
-        return VerifyResponse(verified=verified)
+@router.subscriber("update_username")
+async def update_username(
+    data: UsernameUpdateRequest,
+    user_service: UserServiceDep,
+) -> ResponseMessage[UpdateResponse]:
+    ok = await user_service.change_username(data.user_id, data.username)
+    return ResponseMessage(message=UpdateResponse(updated=ok), status=200)
 
-    @post("/signup/confirm", response_model=VerifyResponse)
-    async def confirm_sign_up(self, request: Request, data: SignupConfirmRequest, response: Response) -> VerifyResponse:
-        if not PROVIDERS.email_enabled:
-            raise InternalLogicException("Email sign up is disabled")
-        verified = await self.mail_service.verify_access(str(data.email), data.token)
-        if verified:
-            user_id = await self.user_service.sign_up(
-                data.username,
-                str(data.email),
-                data.password,
-                data.repeat_password
+
+@router.subscriber("sign_out")
+async def sign_out(
+    data: TokenRequest,
+    user_service: UserServiceDep,
+) -> ResponseMessage[StatusResponse]:
+    await user_service.sign_out(data.token)
+    return ResponseMessage(message=StatusResponse(), status=200)
+
+
+@router.subscriber("reset")
+async def reset(
+    data: EmailRequest,
+    user_service: UserServiceDep,
+    mail_service: MailServiceDep,
+) -> ResponseMessage[StatusResponse]:
+    user_id = await user_service.get_user_id_by_email(str(data.email))
+    if user_id:
+        await mail_service.request_access(str(data.email))
+    return ResponseMessage(message=StatusResponse(), status=200)
+
+
+@router.subscriber("reset.verify")
+async def verify_reset(
+    data: EmailVerifyRequest,
+    mail_service: MailServiceDep,
+) -> ResponseMessage[VerifyResponse]:
+    verified = await mail_service.verify_access(str(data.email), data.token)
+    return ResponseMessage(message=VerifyResponse(verified=verified), status=200)
+
+
+@router.subscriber("reset.confirm")
+async def confirm_reset(
+    data: PasswordConfirmRequest,
+    user_service: UserServiceDep,
+    mail_service: MailServiceDep,
+) -> ResponseMessage[VerifyResponse]:
+    verified = await mail_service.verify_access(str(data.email), data.token)
+    if verified:
+        user_id = await user_service.get_user_id_by_email(str(data.email))
+        if user_id is None:
+            return ResponseMessage(message=VerifyResponse(verified=False), status=200)
+        await user_service.change_password(user_id, data.password, data.repeat_password)
+        await user_service.revoke_tokens(user_id, exclude_token=data.auth_token)
+        await mail_service.remove_access_code(data.email)
+    return ResponseMessage(message=VerifyResponse(verified=verified), status=200)
+
+
+@router.subscriber("signup")
+async def sign_up(
+    data: EmailRequest,
+    user_service: UserServiceDep,
+    mail_service: MailServiceDep,
+) -> ResponseMessage[StatusResponse]:
+    if not PROVIDERS.email_enabled:
+        raise InternalLogicException("Email sign up is disabled")
+    existing_user_id = await user_service.get_user_id_by_email(str(data.email))
+    if not existing_user_id:
+        await mail_service.request_access(str(data.email))
+    return ResponseMessage(message=StatusResponse(), status=200)
+
+
+@router.subscriber("signup.verify")
+async def verify_sign_up(
+    data: EmailVerifyRequest,
+    mail_service: MailServiceDep,
+) -> ResponseMessage[VerifyResponse]:
+    if not PROVIDERS.email_enabled:
+        raise InternalLogicException("Email sign up is disabled")
+
+    verified = await mail_service.verify_access(str(data.email), data.token)
+    return ResponseMessage(message=VerifyResponse(verified=verified), status=200)
+
+
+@router.subscriber("signup.confirm")
+async def confirm_sign_up(
+    data: SignupConfirmRequest,
+    user_service: UserServiceDep,
+    mail_service: MailServiceDep,
+) -> ResponseMessage[
+    VerifyResponse | TokenResponse
+]:  # Returns token on success, or VerifyResponse on failure
+    if not PROVIDERS.email_enabled:
+        raise InternalLogicException("Email sign up is disabled")
+    verified = await mail_service.verify_access(str(data.email), data.token)
+    if verified:
+        user_id = await user_service.sign_up(
+            data.username, str(data.email), data.password, data.repeat_password
+        )
+        if not user_id:
+            return ResponseMessage(
+                message=VerifyResponse(verified=verified), status=200
             )
-            if not user_id:
-                return VerifyResponse(verified=False)
-            await self.mail_service.remove_access_code(str(data.email))
-            if not await self.user_service.validate_user_token(request.cookies.get("token", None)):
-                token = await self.user_service.sign_in(str(data.email), data.password)
-                response.set_cookie("token", token, httponly=True, max_age=60 * 60 * 24 * 30)
-        return VerifyResponse(verified=verified)
+        await mail_service.remove_access_code(str(data.email))
+        # After signup, automatically sign in and return the token
+        token = await user_service.sign_in(str(data.email), data.password)
+        return ResponseMessage(
+            message=TokenResponse(token=token, expires=30 * 24 * 60 * 60), status=200
+        )
+    return ResponseMessage(message=VerifyResponse(verified=verified), status=200)
 
-    @get("/providers", response_model=Providers)
-    async def providers(self):
-        return self.auth_service.get_providers()
 
-    @post("/callback")
-    async def callback(self, req: OAuthConfirm, request: Request, response: Response):
-        try:
-            user_uuid = await self.user_service.get_user_id(request.cookies.get("token"))
-            await self.oauth_service.add_integration(user_uuid, req.provider, req.code)
-        except NotAuthorizedException:
-            token = await self.oauth_service.authorize(req.provider, req.code)
-            response.set_cookie("token", token, httponly=True, max_age=60 * 60 * 24 * 30)
-        return StatusResponse()
+@router.subscriber("providers")
+async def providers(auth_service: AuthServiceDep) -> ResponseMessage[ProvidersResponse]:
+    return ResponseMessage(message=auth_service.get_providers(), status=200)
 
-    @post("/check", response_model=BusyResponse)
-    async def check(self, data: UsernameRequest) -> BusyResponse:
-        return BusyResponse(busy=not await self.user_service.username_available(data.username))
+
+@router.subscriber("callback")
+async def callback(
+    data: OAuthConfirmRequest, oauth_service: OAuthServiceDep
+) -> ResponseMessage[StatusResponse | TokenResponse]:
+    if data.user_id:
+        await oauth_service.add_integration(data.user_id, data.provider, data.code)
+        return ResponseMessage(message=StatusResponse(), status=200)
+    else:
+        token = await oauth_service.authorize(data.provider, data.code)
+        return ResponseMessage(
+            message=TokenResponse(token=token, expires=30 * 24 * 60 * 60), status=200
+        )
+
+
+@router.subscriber("check")
+async def check(
+    data: UsernameRequest, user_service: UserServiceDep
+) -> ResponseMessage[BusyResponse]:
+    return ResponseMessage(
+        message=BusyResponse(
+            busy=not await user_service.username_available(data.username)
+        ),
+        status=200,
+    )

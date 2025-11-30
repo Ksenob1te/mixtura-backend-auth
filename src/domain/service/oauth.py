@@ -3,18 +3,28 @@ from uuid import UUID, uuid4
 import httpx
 from typing import Any
 
-from src.domain.exceptions import IntegrationLimitException, InternalLogicException, NotEnabledForAuthProviderException, NotFoundProviderException, ProviderAlreadyLinkedException, WrongOAuthCodeException
+from src.domain.exceptions import (
+    IntegrationLimitException,
+    InternalLogicException,
+    NotEnabledForAuthProviderException,
+    NotFoundProviderException,
+    ProviderAlreadyLinkedException,
+    WrongOAuthCodeException,
+)
 from src.infra.postgre.repo.provider import ProviderRepository
 from src.infra.postgre.repo.user import UserRepository
 from src.infra.redis.repository import RedisRepository
 from src.providers_config import PROVIDERS
 from src.env_config import env
 
+
 class OAuthService:
-    def __init__(self,
-                 user_repository: UserRepository,
-                 provider_repository: ProviderRepository,
-                 redis_repository: RedisRepository) -> None:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        provider_repository: ProviderRepository,
+        redis_repository: RedisRepository,
+    ) -> None:
         # маппинг функций нормализации профиля
         self.user_parsers = {
             "discord": self._parse_discord_user,
@@ -35,14 +45,20 @@ class OAuthService:
             raise NotEnabledForAuthProviderException()
 
         provider_info = await self.process_callback(provider, code)
-        user_provider = await self.provider_repository.get_by_client_and_provider_name(provider_info["id"], provider)
+        user_provider = await self.provider_repository.get_by_client_and_provider_name(
+            provider_info["id"], provider
+        )
         if user_provider is not None:
             token = uuid4().hex
             await self.redis_repository.set_user_cookie(token, user_provider.user.id)
             return token
 
-        user = await self.user_repository.create_user(provider_info["username"] + str(random.randint(100000, 999999)), None, "")
-        await self.provider_repository.create_provider(provider, provider_info["id"], user.id, provider_info["username"])
+        user = await self.user_repository.create_user(
+            provider_info["username"] + str(random.randint(100000, 999999)), None, ""
+        )
+        await self.provider_repository.create_provider(
+            provider, provider_info["id"], user.id, provider_info["username"]
+        )
         token = uuid4().hex
         await self.redis_repository.set_user_cookie(token, user.id)
         return token
@@ -55,13 +71,19 @@ class OAuthService:
         provider_config = PROVIDERS.oauth_providers[provider]
         provider_info = await self.process_callback(provider, code)
 
-        user_provider = await self.provider_repository.get_by_client_and_provider_name(provider_info["id"], provider)
+        user_provider = await self.provider_repository.get_by_client_and_provider_name(
+            provider_info["id"], provider
+        )
         if user_provider is not None:
             raise ProviderAlreadyLinkedException()
-        user_providers = await self.provider_repository.get_by_user_and_provider_name(user_id, provider)
+        user_providers = await self.provider_repository.get_by_user_and_provider_name(
+            user_id, provider
+        )
         if len(user_providers) >= provider_config.count_limit:
             raise IntegrationLimitException()
-        await self.provider_repository.create_provider(provider, provider_info["id"], user_id, provider_info["username"])
+        await self.provider_repository.create_provider(
+            provider, provider_info["id"], user_id, provider_info["username"]
+        )
 
     async def process_callback(self, provider: str, code: str) -> dict[str, Any]:
         config = PROVIDERS.oauth_providers[provider]
@@ -104,24 +126,15 @@ class OAuthService:
 
     @staticmethod
     def _parse_discord_user(data: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "id": data["id"],
-            "username": f"{data['username']}"
-        }
+        return {"id": data["id"], "username": f"{data['username']}"}
 
     @staticmethod
     def _parse_twitch_user(data: dict[str, Any]) -> dict[str, Any]:
         if "data" in data and len(data["data"]) > 0:
             user = data["data"][0]
-            return {
-                "id": user["id"],
-                "username": user["login"]
-            }
-        return {"id": None, "username": None, "email": None}
+            return {"id": user["id"], "username": user["login"]}
+        return {"id": None, "username": None}
 
     @staticmethod
     def _parse_battlenet_user(data: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "id": str(data.get("id")),
-            "username": data.get("battletag", "")
-        }
+        return {"id": str(data.get("id")), "username": data.get("battletag", "")}

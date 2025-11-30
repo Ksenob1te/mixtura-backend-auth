@@ -1,4 +1,4 @@
-from src.domain.models.response import Providers
+from src.domain.models.response import ProvidersResponse
 from src.providers_config import PROVIDERS
 from urllib.parse import urlencode
 
@@ -20,9 +20,9 @@ class AuthService:
         query = urlencode(params)
         return f"{auth_url}?{query}"
 
-    def get_providers(self) -> Providers:
+    def get_providers(self) -> ProvidersResponse:
 
-        return Providers(**{
+        return ProvidersResponse(**{
             "email_enabled": PROVIDERS.email_enabled,
             "oauth_providers": [
                 {

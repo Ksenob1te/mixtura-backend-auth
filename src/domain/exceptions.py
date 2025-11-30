@@ -1,146 +1,70 @@
-from fastapi import HTTPException
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, \
-    HTTP_500_INTERNAL_SERVER_ERROR, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
+class DomainException(Exception):
+    def __init__(self, status_code: int, message: str):
+        self.status_code = status_code
+        self.message = message
+        super().__init__(message)
 
 
-class NotAuthorizedException(HTTPException):
+class NotAuthorizedException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_401_UNAUTHORIZED,
-            detail={
-                "status": "error",
-                "message": "Not authorized"
-            }
-        )
+        super().__init__(status_code=401, message="Not authorized")
 
 
-class InvalidCredentialsException(HTTPException):
+class InvalidCredentialsException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_401_UNAUTHORIZED,
-            detail={
-                "status": "error",
-                "message": "Invalid credentials"
-            }
-        )
+        super().__init__(status_code=401, message="Invalid credentials")
 
 
-class AlreadyAuthorizedException(HTTPException):
+class AlreadyAuthorizedException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_409_CONFLICT,
-            detail={
-                "status": "error",
-                "message": "Already authorized"
-            }
-        )
+        super().__init__(status_code=409, message="Already authorized")
 
 
-class ExceedRetryLimitException(HTTPException):
+class ExceedRetryLimitException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_409_CONFLICT,
-            detail={
-                "status": "error",
-                "message": "Exceed retry limit"
-            }
-        )
+        super().__init__(status_code=409, message="Exceed retry limit")
 
 
-class UsernameAlreadyTakenException(HTTPException):
+class UsernameAlreadyTakenException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_409_CONFLICT,
-            detail={
-                "status": "error",
-                "message": "Username already taken"
-            }
-        )
+        super().__init__(status_code=409, message="Username already taken")
 
 
-class EmailFormatException(HTTPException):
+class EmailFormatException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail={
-                "status": "error",
-                "message": "Email format is invalid"
-            }
-        )
+        super().__init__(status_code=400, message="Email format is invalid")
 
 
-class PasswordsDontMatchException(HTTPException):
+class PasswordsDontMatchException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail={
-                "status": "error",
-                "message": "Passwords don't match"
-            }
-        )
+        super().__init__(status_code=400, message="Passwords don't match")
 
 
-class NotFoundProviderException(HTTPException):
+class NotFoundProviderException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_404_NOT_FOUND,
-            detail={
-                "status": "error",
-                "message": "Provider not found"
-            }
-        )
+        super().__init__(status_code=404, message="Provider not found")
 
 
-class ProviderAlreadyLinkedException(HTTPException):
+class ProviderAlreadyLinkedException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail={
-                "status": "error",
-                "message": "Provider already linked"
-            }
-        )
+        super().__init__(status_code=400, message="Provider already linked")
 
 
-class IntegrationLimitException(HTTPException):
+class IntegrationLimitException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail={
-                "status": "error",
-                "message": "Integration limit exceeded"
-            }
-        )
+        super().__init__(status_code=400, message="Integration limit exceeded")
 
 
-class WrongOAuthCodeException(HTTPException):
+class WrongOAuthCodeException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_404_NOT_FOUND,
-            detail={
-                "status": "error",
-                "message": "Given code not correct"
-            }
-        )
+        super().__init__(status_code=404, message="Given code not correct")
 
 
-class NotEnabledForAuthProviderException(HTTPException):
+class NotEnabledForAuthProviderException(DomainException):
     def __init__(self):
-        super().__init__(
-            status_code=HTTP_403_FORBIDDEN,
-            detail={
-                "status": "error",
-                "message": "Provider only for integration"
-            }
-        )
+        super().__init__(status_code=403, message="Provider only for integration")
 
 
-class InternalLogicException(HTTPException):
+class InternalLogicException(DomainException):
     def __init__(self, message: str):
-        super().__init__(
-            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "status": "error",
-                "message": message
-            }
-        )
+        super().__init__(status_code=500, message=message)

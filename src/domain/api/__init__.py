@@ -1,8 +1,7 @@
-from fastapi import APIRouter
-from .auth import AuthController
+from faststream.rabbit import RabbitRouter
 
-router = APIRouter(
-    prefix="/api",
-)
+from .auth import router as AuthController
 
-router.include_router(AuthController.create_router())
+router = RabbitRouter(prefix="auth")
+
+router.include_router(AuthController)

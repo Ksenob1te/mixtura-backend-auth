@@ -1,10 +1,15 @@
-from pydantic import BaseModel, ConfigDict
-from uuid import UUID
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
 
 
-class ProviderModel(BaseModel):
+class AuthCheckResponse(BaseModel):
+    user_id: Optional[UUID]
+
+
+class ProviderResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
@@ -12,11 +17,11 @@ class ProviderModel(BaseModel):
     client_username: Optional[str]
 
 
-class UserModel(BaseModel):
+class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     username: Optional[str]
     email: Optional[str]
     registration_date: datetime
-    providers: List[ProviderModel]
+    providers: List[ProviderResponse]

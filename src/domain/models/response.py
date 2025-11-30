@@ -1,4 +1,17 @@
+from typing import Generic, TypeVar
+
 from pydantic import BaseModel, Field
+
+T = TypeVar("T")
+
+
+class ResponseMessage(BaseModel, Generic[T]):
+    status: int
+    message: T
+
+
+class ErrorResponse(BaseModel):
+    message: str
 
 
 class UpdateResponse(BaseModel):
@@ -20,7 +33,7 @@ class VerifyResponse(BaseModel):
     verified: bool = Field(default=False)
 
 
-class Provider(BaseModel):
+class ProviderResponse(BaseModel):
     icon_url: str
     id: str
     display_name: str
@@ -29,6 +42,11 @@ class Provider(BaseModel):
     limit: int
 
 
-class Providers(BaseModel):
+class ProvidersResponse(BaseModel):
     email_enabled: bool
-    oauth_providers: list[Provider]
+    oauth_providers: list[ProviderResponse]
+
+
+class TokenResponse(BaseModel):
+    token: str
+    expires: int

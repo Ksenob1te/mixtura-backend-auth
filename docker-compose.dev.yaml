@@ -1,29 +1,4 @@
 services:
-  auth-service:
-    build: .
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-mixtura}
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_USER: ${REDIS_USER:-default}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-default}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./.local/mixtura-auth:/mixtura-auth/.local
-      - ./.local/migrations-auth:/mixtura-auth/alembic/versions
-
   postgres:
     image: postgres:latest
     restart: always
@@ -56,3 +31,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  rabbitmq:
+    image: rabbitmq:3-management-alpine     # лёгкая и свежая версия
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - ./.local/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
