@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class AuthCheckResponse(BaseModel):
-    user_id: Optional[UUID]
+    user_id: UUID
 
 
 class ProviderResponse(BaseModel):

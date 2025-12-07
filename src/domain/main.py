@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 from faststream import ContextRepo, ExceptionMiddleware, FastStream
-from faststream.rabbit import RabbitBroker
+from faststream.rabbit import RabbitBroker, Channel
 
 import src.domain.api as api
 from src.env_config import env
@@ -22,7 +22,11 @@ def error_handler(exc: DomainException) -> ResponseMessage[ErrorResponse]:
     )
 
 
-broker = RabbitBroker(env.rabbit.url, middlewares=[exc_middleware])
+broker = RabbitBroker(
+    env.rabbit.url,
+    middlewares=[exc_middleware],
+    default_channel=Channel(prefetch_count=10),
+)
 
 broker.include_router(api.router)
 

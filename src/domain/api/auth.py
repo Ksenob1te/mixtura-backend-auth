@@ -59,7 +59,7 @@ async def get_user_info(
     return ResponseMessage(message=UserResponse.model_validate(user_field), status=200)
 
 
-@router.subscriber("sign_in")
+@router.subscriber("signin")
 async def sign_in(
     data: SignInRequest,
     user_service: UserServiceDep,
@@ -79,7 +79,7 @@ async def update_username(
     return ResponseMessage(message=UpdateResponse(updated=ok), status=200)
 
 
-@router.subscriber("sign_out")
+@router.subscriber("signout")
 async def sign_out(
     data: TokenRequest,
     user_service: UserServiceDep,
@@ -199,7 +199,7 @@ async def callback(
         )
 
 
-@router.subscriber("check")
+@router.subscriber("check_username")
 async def check(
     data: UsernameRequest, user_service: UserServiceDep
 ) -> ResponseMessage[BusyResponse]:
