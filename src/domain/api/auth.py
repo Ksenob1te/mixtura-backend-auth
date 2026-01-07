@@ -1,6 +1,8 @@
 import logging
+from uuid import UUID
 
 from faststream.rabbit import RabbitRouter
+from pydantic import TypeAdapter
 
 from src.dependency import (
     AuthServiceDep,
@@ -8,6 +10,7 @@ from src.dependency import (
     OAuthServiceDep,
     UserServiceDep,
 )
+from ..models.request import UserBulkRequest, UserRequest
 from src.providers_config import PROVIDERS
 
 from ..exceptions import InternalLogicException
@@ -58,6 +61,26 @@ async def get_user_info(
         raise InternalLogicException("User not found")
     return ResponseMessage(message=UserResponse.model_validate(user_field), status=200)
 
+@router.subscriber("get_user")
+async def get_user(
+    data: UserRequest,
+    user_service: UserServiceDep,
+) -> ResponseMessage[UserResponse | ErrorResponse]:
+    user_field = await user_service.get_user_field(data.user_id)
+    if user_field is None:
+        logger.warning("User not found in DB, id=%s", data.user_id)
+        raise InternalLogicException("User not found")
+    return ResponseMessage(message=UserResponse.model_validate(user_field), status=200)
+
+@router.subscriber("get_users.bulk")
+async def get_users_bulk(
+    data: UserBulkRequest,
+    user_service: UserServiceDep,
+) -> ResponseMessage[dict[UUID, UserResponse] | ErrorResponse]:
+    users_data = await user_service.get_user_field_bulk(data.user_ids)
+    ta = TypeAdapter(dict[UUID, UserResponse])
+    users = ta.validate_python(users_data)
+    return ResponseMessage(message=users, status=200)
 
 @router.subscriber("signin")
 async def sign_in(

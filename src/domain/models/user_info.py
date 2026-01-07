@@ -21,7 +21,7 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    username: Optional[str]
+    username: str
     email: Optional[str]
     registration_date: datetime
     providers: List[ProviderResponse]

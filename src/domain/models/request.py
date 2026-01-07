@@ -7,6 +7,14 @@ class TokenRequest(BaseModel):
     token: str
 
 
+class UserRequest(BaseModel):
+    user_id: UUID
+
+
+class UserBulkRequest(BaseModel):
+    user_ids: list[UUID]
+
+
 class UsernameRequest(BaseModel):
     username: str
 
