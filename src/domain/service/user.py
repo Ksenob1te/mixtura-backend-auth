@@ -13,7 +13,7 @@ class UserService:
         self.provider_repo = provider_repo
         self.redis_repo = redis_repo
 
-    async def validate_user_token(self, token: str | None) -> bool: # 123
+    async def validate_user_token(self, token: str | None) -> bool:
         if not token:
             return False
         session_data = await self.redis_repo.get_user_by_cookie(token)

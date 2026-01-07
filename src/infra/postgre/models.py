@@ -11,7 +11,7 @@ class User(Base):
     __tablename__ = "user_table"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    username: Mapped[Optional[str]] = mapped_column(nullable=True)
+    username: Mapped[str] = mapped_column()
     email: Mapped[Optional[str]] = mapped_column(nullable=True, unique=True)
     hashed_password: Mapped[Optional[str]] = mapped_column(nullable=True)
 
