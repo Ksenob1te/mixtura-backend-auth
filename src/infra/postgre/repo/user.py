@@ -1,4 +1,7 @@
+from typing import Sequence
 from sqlalchemy import func, select, update
+from sqlalchemy import inspect
+from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from ..models import User
@@ -23,13 +26,28 @@ class UserRepository:
         stmt = select(User).where(User.id == user_id).limit(1)
         return await self.session.scalar(stmt)
 
+    async def get_by_id_bulk(self, user_ids: list[UUID]) -> Sequence[User]:
+        stmt = select(User).where(User.id.in_(user_ids))
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def get_by_email(self, email: str) -> User | None:
         stmt = select(User).where(User.email == email).limit(1)
         return await self.session.scalar(stmt)
 
+    async def get_by_email_bulk(self, emails: list[str]) -> Sequence[User]:
+        stmt = select(User).where(User.email.in_(emails))
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def get_by_username(self, username: str) -> User | None:
         stmt = select(User).where(func.lower(User.username) == username.lower()).limit(1)   # type: ignore
         return await self.session.scalar(stmt)
+
+    async def get_by_username_bulk(self, usernames: list[str]) -> Sequence[User]:
+        stmt = select(User).where(func.lower(User.username).in_([u.lower() for u in usernames]))  # type: ignore
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
 
     async def create_user(self, username: str, email: str | None, password: str) -> User:
         user = User(

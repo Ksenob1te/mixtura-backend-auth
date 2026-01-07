@@ -34,13 +34,25 @@ class UserService:
         user = await self.user_repo.get_by_email(email)
         return user.id if user else None
 
+    async def get_user_id_by_email_bulk(self, emails: list[str]) -> dict[str, UUID]:
+        users = await self.user_repo.get_by_email_bulk(emails)
+        return {user.email: user.id for user in users if user.email is not None}
+
     async def get_user_id_by_username(self, username: str) -> UUID | None:
         user = await self.user_repo.get_by_username(username)
         return user.id if user else None
 
+    async def get_user_id_by_username_bulk(self, usernames: list[str]) -> dict[str, UUID]:
+        users = await self.user_repo.get_by_username_bulk(usernames)
+        return {user.username: user.id for user in users}
+
     async def get_user_field(self, user_id: UUID) -> User | None:
         user_model = await self.user_repo.get_by_id(user_id)
         return user_model
+
+    async def get_user_field_bulk(self, user_ids: list[UUID]) -> dict[UUID, User]:
+        users = await self.user_repo.get_by_id_bulk(user_ids)
+        return {user.id: user for user in users}
 
     async def username_available(self, username: str) -> bool:
         user = await self.user_repo.get_by_username(username)

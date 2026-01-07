@@ -8,3 +8,4 @@ __pycache__
 /logger.log
 /.local/
 docker-compose*override.yaml
+/test_manual.py
