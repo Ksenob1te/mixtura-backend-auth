@@ -34,3 +34,7 @@ class ProviderRepository:
             UserProvider.name == provider_name
         ).limit(1)
         return await self.session.scalar(stmt)
+
+    async def get_by_ids(self, integration_ids: list[UUID]) -> list[UserProvider]:
+        stmt = select(UserProvider).where(UserProvider.id.in_(integration_ids))
+        return list((await self.session.scalars(stmt)).all())

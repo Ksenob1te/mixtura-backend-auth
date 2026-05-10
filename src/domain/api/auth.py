@@ -1,6 +1,7 @@
 import logging
 from uuid import UUID
 
+from faststream import Depends
 from faststream.rabbit import RabbitRouter
 from pydantic import TypeAdapter
 
@@ -9,8 +10,11 @@ from src.dependency import (
     MailServiceDep,
     OAuthServiceDep,
     UserServiceDep,
+    get_db_session,
+    get_provider_repository,
 )
-from ..models.request import UserBulkRequest, UserRequest
+from src.infra.postgre.repo.provider import ProviderRepository
+from ..models.request import IntegrationAccountsRequest, UserBulkRequest, UserRequest
 from src.providers_config import PROVIDERS
 
 from ..exceptions import InternalLogicException
@@ -232,3 +236,17 @@ async def check(
         ),
         status=200,
     )
+
+
+@router.subscriber("integrations.get_accounts")
+async def get_integration_accounts(
+    data: IntegrationAccountsRequest,
+    provider_repo: ProviderRepository = Depends(get_provider_repository),
+) -> ResponseMessage[dict[str, str]]:
+    providers = await provider_repo.get_by_ids(data.integration_ids)
+    result = {
+        str(p.id): str(p.client_username if p.client_username else p.client_id)
+        for p in providers
+        if p.client_username or p.client_id
+    }
+    return ResponseMessage(message=result, status=200)
