@@ -57,7 +57,7 @@ class SignInRequest(BaseModel):
 class OAuthConfirmRequest(BaseModel):
     provider: str
     code: str
-    user_id: UUID | None
+    user_id: UUID | None = None
 
 
 class IntegrationAccountsRequest(BaseModel):
