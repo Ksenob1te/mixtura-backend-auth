@@ -12,6 +12,7 @@ class AuthCheckResponse(BaseModel):
 class ProviderResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: UUID
     name: str
     client_id: Optional[str]
     client_username: Optional[str]
